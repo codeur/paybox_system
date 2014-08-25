@@ -22,6 +22,8 @@ module Paybox
         formatted_options = Hash[options.map { |k, v| ["PBX_#{k.to_s.upcase}", v] }]
         formatted_options["PBX_HASH"] = "SHA512"
 
+
+
         date_iso = Time.now.utc.iso8601
         formatted_options["PBX_TIME"] = date_iso
 
@@ -35,6 +37,9 @@ module Paybox
 
         formatted_options["PBX_HMAC"] = signature
 
+
+        formatted_options['PBX_PORTEUR'] = CGI.escape(formatted_options['PBX_PORTEUR']) if formatted_options['PBX_PORTEUR']
+        
         formatted_options
       end
 
