@@ -19,7 +19,7 @@ module Paybox
       def self.hash_form_fields_from(options = {})
         raise StandardError, "missing :secret_key in config Hash" unless @@config[:secret_key]
 
-        formatted_options = Hash[options.map { |k, v| ["PBX_#{k.to_s.upcase}", v] }]
+        formatted_options = Hash[options.map { |k, v| ["PBX_#{format_key(k)}", v] unless v.blank? }]
         formatted_options["PBX_HASH"] = "SHA512"
 
 
@@ -30,16 +30,16 @@ module Paybox
         base_params_query = formatted_options.to_a.map { |a| a.join("=") }.join("&")
 
         key = @@config[:secret_key]
-        
+
         binary_key = [key].pack("H*")
-        signature = OpenSSL::HMAC.hexdigest(OpenSSL::Digest::Digest.new('sha512'),
+        signature = OpenSSL::HMAC.hexdigest(OpenSSL::Digest.new('sha512'),
                       binary_key, base_params_query).upcase
 
         formatted_options["PBX_HMAC"] = signature
 
 
         formatted_options['PBX_PORTEUR'] = CGI.escape(formatted_options['PBX_PORTEUR']) if formatted_options['PBX_PORTEUR']
-        
+
         formatted_options
       end
 
@@ -49,6 +49,12 @@ module Paybox
 
         public_key.verify(digest, Base64.decode64(Rack::Utils.unescape(sign)), params)
       end
+
+      def self.format_key(key)
+        return '3DS' if key.to_s.upcase == 'TDS'
+        key.to_s.upcase
+      end
+
     end
   end
 end

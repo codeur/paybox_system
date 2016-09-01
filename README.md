@@ -58,8 +58,11 @@ You must initialize a configuration Hash before using the main Base class method
 This configuration Hash must at least contain the secret key in the key :secret_key.
 
 For example, the test secret key :
-
-    Paybox::System::Base.config = { :secret_key => "0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF" }
+```ruby
+Paybox::System::Base.config = {
+  :secret_key => "0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF" 
+}
+```
 
 Building the Paybox parameters
 ------------------------------
@@ -68,27 +71,52 @@ Check the manual for the complete list of all the different parameters you need 
 All these parameters are upper-case and begin by `PBX_`, like : `PBX_SITE`.
 Use the `Paybox::System::Base.hash_form_fields_from` with a hash that contains all the paybox parameters in symbols without `PBX_`, for example :
 
-     Paybox::System::Base.hash_form_fields_from(:site => "XYZ") # => returns { "PBX_SITE" => "XYZ", etc. }
+```ruby
+Paybox::System::Base.hash_form_fields_from(:site => "XYZ") # => returns { "PBX_SITE" => "XYZ", etc. }
+```
 
 The returning Hash also contains 3 additional keys : `PBX_HASH` that is always `SHA512`, `PBX_TIME` with the current timestamp (so you don't have to calculate it yourself) and more important, it contains the signature in `PBX_HMAC` based on all the previous parameters and the secret key.
 
 Real example with the Paybox test parameters :
 
-    Paybox::System::Base.hash_form_fields_from(:site => "1999888", :rang => "32", :identifiant => "107904482",
-                                               :paybox => "https://preprod-tpeweb.paybox.com/cgi/MYchoix_pagepaiement.cgi",
-                                               :backup1 => "https://preprod-tpeweb.paybox.com/cgi/MYchoix_pagepaiement.cgi",
-                                               :backup2 => "https://preprod-tpeweb.paybox.com/cgi/MYchoix_pagepaiement.cgi",
-                                               :total => "1500",
-                                               :devise => 978,
-                                               :cmd => "id cmd 123456",
-                                               :porteur => "test@paybox.com",
-                                               :retour => "amount:M;reference:R;autorization:A;error:E;sign:K",
-                                               :effectue => "http://monsite.com/payment_success",
-                                               :refuse => "http://monsite.com/payment_refused",
-                                               :annule => "http://monsite.com/payment_canceled",
-                                               :repondre_a => "http://monsite.com/payment_callback")
+```ruby
+Paybox::System::Base.hash_form_fields_from(
+  :site => "1999888",
+  :rang => "32",
+  :identifiant => "107904482",
+  :paybox => "https://preprod-tpeweb.paybox.com/cgi/MYchoix_pagepaiement.cgi",
+  :backup1 => "https://preprod-tpeweb.paybox.com/cgi/MYchoix_pagepaiement.cgi",
+  :backup2 => "https://preprod-tpeweb.paybox.com/cgi/MYchoix_pagepaiement.cgi",
+  :total => "1500",
+  :devise => 978,
+  :cmd => "id cmd 123456",
+  :porteur => "test@paybox.com",
+  :retour => "amount:M;reference:R;autorization:A;error:E;sign:K",
+  :effectue => "http://monsite.com/payment_success",
+  :refuse => "http://monsite.com/payment_refused",
+  :annule => "http://monsite.com/payment_canceled",
+  :repondre_a => "http://monsite.com/payment_callback"
+)
+```
 
 Use the returned Hash to build the form.
+
+##### 3-D Secure
+
+To work with 3-D Secure variable add `tds` for three-D Secure in the hash used in `Paybox::System::Base.hash_form_fields_from`. This variable will be automatically converted to `PBX_3DS` by the `Paybox::System::Base.hash_form_fields_from` helper.
+
+**Reminder**: *If `PBX_3DS` present the 3-D secure process wil be bypassed by Paybox (whatever the value)*
+
+ex:
+
+```ruby
+Paybox::System::Base.hash_form_fields_from(
+  :site => "1999888",
+  :rang => "32",
+  ...
+  :repondre_a => "http://monsite.com/payment_callback",
+  :tds => 'N')
+```
 
 Verifying the Paybox Response
 -----------------------------
