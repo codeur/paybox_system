@@ -27,6 +27,21 @@ method, so you can safely use it on any architecture.
 I highly recommend you to contact Paybox by email and tell them you want to use
 *"Paybox System without CGI by calculating the HMAC yourself"*.
 
+<!-- TOC depthFrom:2 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
+
+- [Paybox System Basics](#paybox-system-basics)
+- [How to use this gem](#how-to-use-this-gem)
+- [Configuration](#configuration)
+- [Building the Paybox parameters](#building-the-paybox-parameters)
+	- [3-D Secure](#3-d-secure)
+- [Verifying the Paybox Response](#verifying-the-paybox-response)
+- [Rails helpers](#rails-helpers)
+- [Contributing](#contributing)
+- [Copyright](#copyright)
+
+<!-- /TOC -->
+
+
 ## Paybox System Basics
 
 (Do not read this paragraph if you already know how Paybox System works)
@@ -65,27 +80,26 @@ send to Paybox, the other to check the integrity of the Paybox response.
 
 ## Configuration
 
-You must initialize a configuration Hash before using the main Base class
-methods. This configuration Hash must at least contain the secret key in the key
+You must initialize a configuration before using the main `Paybox::System` class
+methods. This configuration must contain the secret key in the key
 `:secret_key`.
 
 For example, the test secret key:
 ```ruby
-Paybox::System::Base.config = {
-  :secret_key => "0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF"
-}
+# in config/initializers/paybox_system.rb
+Paybox::System.config.secret_key = "0123456789ABCDEF0123456789ABCDEF..."
 ```
 
 ## Building the Paybox parameters
 
 Check the manual for the complete list of all the different parameters you need
 to send to Paybox. All these parameters are upper-case and begin by `PBX_`,
-like: `PBX_SITE`. Use the `Paybox::System::Base.hash_form_fields_from` with a
+like: `PBX_SITE`. Use the `Paybox::System.formatted_params` with a
 hash that contains all the paybox parameters in symbols without `PBX_`, for
 example:
 
 ```ruby
-Paybox::System::Base.hash_form_fields_from(:site => "XYZ") # => returns { "PBX_SITE" => "XYZ", etc. }
+Paybox::System.formatted_params(site: "XYZ") # => returns { "PBX_SITE" => "XYZ", etc. }
 ```
 
 The returning Hash also contains 3 additional keys: `PBX_HASH` that is always
@@ -96,22 +110,22 @@ on all the previous parameters and the secret key.
 Real example with the Paybox test parameters:
 
 ```ruby
-Paybox::System::Base.hash_form_fields_from(
-  :site => "1999888",
-  :rang => "32",
-  :identifiant => "107904482",
-  :paybox => "https://preprod-tpeweb.paybox.com/cgi/MYchoix_pagepaiement.cgi",
-  :backup1 => "https://preprod-tpeweb.paybox.com/cgi/MYchoix_pagepaiement.cgi",
-  :backup2 => "https://preprod-tpeweb.paybox.com/cgi/MYchoix_pagepaiement.cgi",
-  :total => "1500",
-  :devise => 978,
-  :cmd => "id cmd 123456",
-  :porteur => "test@paybox.com",
-  :retour => "amount:M;reference:R;autorization:A;error:E;sign:K",
-  :effectue => "http://monsite.com/payment_success",
-  :refuse => "http://monsite.com/payment_refused",
-  :annule => "http://monsite.com/payment_canceled",
-  :repondre_a => "http://monsite.com/payment_callback"
+Paybox::System.formatted_params(
+  site:        "1999888",
+  rang:        "32",
+  identifiant: "107904482",
+  paybox:      "https://preprod-tpeweb.paybox.com/cgi/MYchoix_pagepaiement.cgi",
+  backup1:     "https://preprod-tpeweb.paybox.com/cgi/MYchoix_pagepaiement.cgi",
+  backup2:     "https://preprod-tpeweb.paybox.com/cgi/MYchoix_pagepaiement.cgi",
+  total:       "1500",
+  devise:      978,
+  cmd:         "id cmd 123456",
+  porteur:     "test@paybox.com",
+  retour:      "amount:M;reference:R;autorization:A;error:E;sign:K",
+  effectue:    "http://example.com/payment_success",
+  refuse:      "http://example.com/payment_refused",
+  annule:      "http://example.com/payment_canceled",
+  repondre_a:  "http://example.com/payment_callback"
 )
 ```
 
@@ -120,9 +134,9 @@ Use the returned Hash to build the form.
 ### 3-D Secure
 
 To work with 3-D Secure variable add `tds` for three-D Secure in the hash used
-in `Paybox::System::Base.hash_form_fields_from`. This variable will be
+in `Paybox::System.formatted_params`. This variable will be
 automatically converted to `PBX_3DS` by the
-`Paybox::System::Base.hash_form_fields_from` helper.
+`Paybox::System.formatted_params` helper.
 
 **Reminder**: *If `PBX_3DS` present the 3-D secure process wil be bypassed by
 Paybox (whatever the value)*
@@ -130,12 +144,12 @@ Paybox (whatever the value)*
 Ex:
 
 ```ruby
-Paybox::System::Base.hash_form_fields_from(
-  :site => "1999888",
-  :rang => "32",
+Paybox::System.formatted_params(
+  site:       "1999888",
+  rang:       "32",
   ...
-  :repondre_a => "http://monsite.com/payment_callback",
-  :tds => 'N')
+  repondre_a: "http://example.com/payment_callback",
+  tds:        'N')
 ```
 
 ## Verifying the Paybox Response
@@ -146,48 +160,39 @@ manually-made request to your server. To do so, you have to verify the signature
 provided by Paybox in the request.
 
 You have to get the full request path and separate the parameters and the
-signature. Then use the `Paybox::System::Base.check_response?` with the
+signature. Then use the `Paybox::System.valid_response?` with the
 parameters string and the signature. If the method returns true, the message
 integrity is verified, otherwise there is a problem and you should raise an
 exception.
 
 For example:
+```ruby
+# http://example.com/payment_callback?amount=1500&error=00000&reference=id123456&sign=ABCDEFGH123456
+# => The parameters string is: "amount=1500&error=00000&reference=id123456"
+# => The signature string is: "ABCDEFGH123456"
 
-    http://mysite.com/payment_callback?amount=1500&error=00000&reference=id123456&sign=ABCDEFGH123456
-
-    => The parameters string is: "amount=1500&error=00000&reference=id123456"
-    => The signature string is: "ABCDEFGH123456"
-
-    => Paybox::System::Base.check_response?("amount=1500&error=00000&reference=id123456", "ABCDEFGH123456")
+Paybox::System.valid_response?("amount=1500&error=00000&reference=id123456", "ABCDEFGH123456")
+```
 
 ## Rails helpers
 
-If you use Rails 3, you don't have to directly use the Base methods.
+If you use Rails 3+, you don't have to directly use the `Paybox::System` methods.
 This gem provides a helper class that contains a view helper to generate the
 form and a `before_action` to use in controllers to check the integrity of the
 Paybox response.
 
-Create an initializer `config/initializers/paybox_system.rb`:
+In your Gemfile
 ```ruby
-require "paybox_system/rails/helpers"
-Paybox::System::Base.config = { :secret_key => "YOUR_SECRET_KEY" }
-```
-**Note** I recommend you to load the key depending of the environment! Connect
-to the Paybox administration interface to generate the key (see the manual)
-
-
-In the view Helper you want to create a paybox form, add:
-```ruby
-include Paybox::System::Rails::Helpers
+gem 'paybox_system', require: 'paybox/system/rails'
 ```
 
-Then use the `paybox_hidden_fields` helper with the same Hash you may use with
-the `hash_form_fields_from` method (bellow).
+Then use the `paybox_hidden_field_tags` helper with the same Hash you may use with
+the `formatted_params` method (bellow).
 
 Example of the view:
 ```html+erb
 <form method="POST" action="https://preprod-tpeweb.paybox.com/cgi/MYchoix_pagepaiement.cgi">
-  <%= paybox_hidden_fields :site => "ABCDEFG", :rang => "01" # , ... See bellow for the Hash you have to create %>
+  <%= paybox_hidden_field_tags site: "ABCDEFG", rang: "01" # , ... See below for the Hash you have to create %>
 </form>
 ```
 
@@ -197,12 +202,10 @@ additional fields that Rails adds with these helpers.
 
 In the controller(s) that contains the action(s) called by Paybox (for example:
 when a payment is made (IPN) or canceled), to check the integrity of the
-response, use the `check_paybox_integrity!` `before_action` provided by the
-module `Paybox::System::Rails::Integrity`.
+response, use the `check_paybox_integrity!` `before_action`.
 
 ```ruby
 class PurchasedProductsController < ApplicationController
-  include Paybox::System::Rails::Integrity
 
   before_action :check_paybox_integrity!
 
@@ -212,7 +215,7 @@ class PurchasedProductsController < ApplicationController
       # ...
     end
 
-    render :text => "OK"
+    render text: "OK"
   end
 end
 ```
@@ -223,10 +226,10 @@ tell Paybox to append the signature in a parameter called `sign`.
 So the `PBX_RETOUR` parameter (`:retour` key in the Hash) must finish by:
 `sign:K`.
 See the official manual for more information on the `PBX_RETOUR` variable.
-For example, you may use: `:retour => "amount:M;reference:R;autorization:A;error:E;sign:K"`
+For example, you may use: `retour: "amount:M;reference:R;autorization:A;error:E;sign:K"`
 in the form fields generation method.
 
-## Contributing to Paybox System for Ruby
+## Contributing
 
 * Check out the latest master to make sure the feature hasn't been implemented
   or the bug hasn't been fixed yet.

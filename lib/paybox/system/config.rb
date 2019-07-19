@@ -2,6 +2,8 @@
 
 module Paybox
   module System
-    VERSION = '2.0.0'
+    class Config
+      attr_accessor :secret_key
+    end
   end
 end
