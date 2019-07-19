@@ -18,7 +18,7 @@ Jeweler::Tasks.new do |gem|
   gem.homepage = "http://github.com/slainer68/paybox_system"
   gem.license = "MIT"
   gem.summary = %Q{Paybox System e-commerce gateway Ruby implementation}
-  gem.description = %Q{Paybox System e-commerce gateway Ruby implementation}
+  gem.description = %Q{Paybox System e-commerce gateway Ruby implementation. Helps to manage parameters to send to gateways.}
   gem.email = "slainer68@gmail.com"
   gem.authors = ["Nicolas Blanco"]
   # dependencies defined in Gemfile
