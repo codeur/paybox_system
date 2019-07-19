@@ -1,25 +1,28 @@
+# frozen_string_literal: true
+
 module Paybox
   module System
     module Rails
       module Integrity
         class Error < StandardError; end
 
-        protected
+      protected
+
         def check_paybox_integrity!
-          raise Error, "Bad response" unless params[:error].present? && params[:sign].present?
+          raise Error, 'Bad response' unless params[:error].present? && params[:sign].present?
 
           request_fullpath = request.fullpath
 
-          request_params = request_fullpath[request_fullpath.index("?")+1..request_fullpath.index("&sign")-1]
-          request_sign = request_fullpath[request_fullpath.index("&sign")+6..-1]
+          request_params = request_fullpath[request_fullpath.index('?') + 1..request_fullpath.index('&sign') - 1]
+          request_sign = request_fullpath[request_fullpath.index('&sign') + 6..-1]
 
-          raise Error, "Bad Paybox integrity test" unless Paybox::System::Base.check_response?(request_params, request_sign)
+          raise Error, 'Bad Paybox integrity test' unless Paybox::System::Base.check_response?(request_params, request_sign)
         end
       end
 
       module Helpers
         def paybox_hidden_fields(opts = {})
-          out = ""
+          out = ''
           formatted_options = Paybox::System::Base.hash_form_fields_from(opts)
 
           formatted_options.each do |o, v|
