@@ -1,25 +1,21 @@
 # Paybox System for Ruby
 
-[![Build Status](https://secure.travis-ci.org/slainer68/paybox_system.png?branch=master)](http://travis-ci.org/slainer68/paybox_system)
-
-## Introduction
-
-This gem is the Ruby implementation of the e-commerce payment gateway Paybox
-System from [Paybox](http://www.paybox.com).
+This gem is the Ruby implementation of the e-commerce payment gateway **Paybox
+System** from [Paybox](http://www.paybox.com).
 
 This gem is unofficial and is not approved or endorsed by Paybox.
 
 Please note that Paybox provides several solutions. Depending of the solution
 you have chosen, you must use different implementations.
 
-In my humble opinion :
+In my humble opinion:
 
-* For Paybox Direct, use ActiveMerchant and the built-in Paybox Direct gateway
-* For Paybox Direct Plus, use ActiveMerchant and use the Paybox Direct Plus
+* For **Paybox Direct**, use ActiveMerchant and the built-in Paybox Direct gateway
+* For **Paybox Direct Plus**, use ActiveMerchant and use the Paybox Direct Plus
   gateway provided [here](https://github.com/arambert/Paybox-Direct-Plus)
-* For Paybox System, use this gem.
+* For **Paybox System**, use this gem.
 
-IMPORTANT! The default way of using Paybox System is by sending commands to a
+**IMPORTANT!** The default way of using Paybox System is by sending commands to a
 CGI module.
 The problem with the CGI is that you have to use the good CGI depending on your
 architecture, if you upgrade your architecture it may breaks, and moreover on
@@ -29,7 +25,7 @@ Paybox provides also a way to use Paybox System without CGI. This gem use this
 method, so you can safely use it on any architecture.
 
 I highly recommend you to contact Paybox by email and tell them you want to use
-"Paybox System without CGI by calculating the HMAC yourself".
+*"Paybox System without CGI by calculating the HMAC yourself"*.
 
 ## Paybox System Basics
 
@@ -64,7 +60,7 @@ cryptographic key (RSA) to be sure that the request has been made by Paybox.
 This gem only depends on the built-in OpenSSL Ruby libs and Rack. You can use it
 with any Ruby web framework.
 
-The gem consists of 2 main methods : one to build the parameters you have to
+The gem consists of 2 main methods: one to build the parameters you have to
 send to Paybox, the other to check the integrity of the Paybox response.
 
 ## Configuration
@@ -92,12 +88,12 @@ example:
 Paybox::System::Base.hash_form_fields_from(:site => "XYZ") # => returns { "PBX_SITE" => "XYZ", etc. }
 ```
 
-The returning Hash also contains 3 additional keys : `PBX_HASH` that is always
+The returning Hash also contains 3 additional keys: `PBX_HASH` that is always
 `SHA512`, `PBX_TIME` with the current timestamp (so you don't have to calculate
 it yourself) and more important, it contains the signature in `PBX_HMAC` based
 on all the previous parameters and the secret key.
 
-Real example with the Paybox test parameters :
+Real example with the Paybox test parameters:
 
 ```ruby
 Paybox::System::Base.hash_form_fields_from(
@@ -128,7 +124,8 @@ in `Paybox::System::Base.hash_form_fields_from`. This variable will be
 automatically converted to `PBX_3DS` by the
 `Paybox::System::Base.hash_form_fields_from` helper.
 
-**Reminder**: *If `PBX_3DS` present the 3-D secure process wil be bypassed by Paybox (whatever the value)*
+**Reminder**: *If `PBX_3DS` present the 3-D secure process wil be bypassed by
+Paybox (whatever the value)*
 
 Ex:
 
@@ -154,12 +151,12 @@ parameters string and the signature. If the method returns true, the message
 integrity is verified, otherwise there is a problem and you should raise an
 exception.
 
-For example :
+For example:
 
     http://mysite.com/payment_callback?amount=1500&error=00000&reference=id123456&sign=ABCDEFGH123456
 
-    => The parameters string is : "amount=1500&error=00000&reference=id123456"
-    => The signature string is : "ABCDEFGH123456"
+    => The parameters string is: "amount=1500&error=00000&reference=id123456"
+    => The signature string is: "ABCDEFGH123456"
 
     => Paybox::System::Base.check_response?("amount=1500&error=00000&reference=id123456", "ABCDEFGH123456")
 
