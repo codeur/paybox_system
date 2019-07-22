@@ -15,9 +15,9 @@ module PayboxSystem
   PUBLIC_KEY = OpenSSL::PKey::RSA.new(File.read(PUBLIC_KEY_PATH))
 
   SERVERS = {
-    pre_production:    'https://preprod-tpeweb.paybox.com',
-    production:        'https://tpeweb.paybox.com',
-    production_rescue: 'https://tpeweb1.paybox.com'
+    test:        'https://preprod-tpeweb.paybox.com',
+    live:        'https://tpeweb.paybox.com',
+    live_backup: 'https://tpeweb1.paybox.com'
   }.freeze
 
   CURRENCY_CODES = {
@@ -61,32 +61,16 @@ module PayboxSystem
     end
 
     def formatted_query(options = {})
-      formatted_params(options).map { |k, v| k.to_s + '=' + v.to_s }.join('&')
+      format_query(formatted_params(options))
     end
 
     def formatted_params(options = {})
-      unless config.secret_key
-        raise MissingSecretKey, 'Missing :secret_key in config'
-      end
-
       return {} if options.empty?
 
-      params = options.each_with_object({}) do |(k, v), h|
-        unless v.nil? || v.to_s =~ /\A[[:space:]]*\z/
-          h["PBX_#{k == :tds ? '3DS' : k.to_s.upcase}"] = v
-        end
-      end
-      params['PBX_SITE'] ||= config.site
-      params['PBX_RANG'] ||= config.rank
-      params['PBX_IDENTIFIANT'] ||= config.identifier
-      params['PBX_DEVISE'] ||= CURRENCY_CODES[config.currency]
+      params = generate_base_params(options)
       params['PBX_HASH'] = HASH_METHOD
       params['PBX_TIME'] = Time.now.utc.iso8601
-
-      base_params_query = params.map { |k, v| k.to_s + '=' + v.to_s }.join('&')
-      binary_key = [config.secret_key].pack('H*')
-      signature = OpenSSL::HMAC.hexdigest(OpenSSL::Digest.new(params['PBX_HASH'].downcase), binary_key, base_params_query)
-      params['PBX_HMAC'] = signature.upcase
+      params['PBX_HMAC'] = compute_hmac_signature(params, params['PBX_HASH'].downcase)
 
       if params['PBX_PORTEUR']
         params['PBX_PORTEUR'] = CGI.escape(params['PBX_PORTEUR'])
@@ -102,10 +86,36 @@ module PayboxSystem
 
   protected
 
+    def generate_base_params(options)
+      params = options.each_with_object({}) do |(k, v), h|
+        unless v.nil? || v.to_s =~ /\A[[:space:]]*\z/
+          h["PBX_#{k == :tds ? '3DS' : k.to_s.upcase}"] = v
+        end
+      end
+      params['PBX_SITE'] ||= config.site if config.site?
+      params['PBX_RANG'] ||= config.rank if config.rank?
+      params['PBX_IDENTIFIANT'] ||= config.identifier if config.identifier?
+      params['PBX_DEVISE'] ||= config.currency if config.currency?
+      params
+    end
+
+    def compute_hmac_signature(params, hash_method)
+      raise MissingSecretKey, 'Missing secret_key' unless config.secret_key
+
+      base_params_query = format_query(params)
+      binary_key = [config.secret_key].pack('H*')
+      signature = OpenSSL::HMAC.hexdigest(OpenSSL::Digest.new(hash_method), binary_key, base_params_query)
+      signature.upcase
+    end
+
+    def format_query(params)
+      params.map { |k, v| k.to_s + '=' + v.to_s }.join('&')
+    end
+
     def server_url(path, options = {})
       base_url = SERVERS[config.environment]
       unless base_url
-        raise MissingEnvironment, 'Missing or invalid :environment in config'
+        raise MissingEnvironment, 'Missing or invalid environment'
       end
 
       return base_url + path if options.empty?

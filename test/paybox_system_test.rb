@@ -24,7 +24,7 @@ class PayboxSystemTest < Minitest::Test
 
   def test_formatted_params
     assert_raises ::PayboxSystem::MissingSecretKey do
-      ::PayboxSystem.formatted_params
+      ::PayboxSystem.formatted_params(total: 100)
     end
 
     PayboxSystem.config.secret_key = '0123456789ABCDEF' * 8
@@ -52,11 +52,10 @@ class PayboxSystemTest < Minitest::Test
     assert_raises PayboxSystem::MissingEnvironment do
       PayboxSystem.light_url
     end
-    PayboxSystem.config.environment = :invalid
     assert_raises PayboxSystem::MissingEnvironment do
-      PayboxSystem.light_url
+      PayboxSystem.config.environment = :not_test_or_live
     end
-    PayboxSystem.config.environment = :pre_production
+    PayboxSystem.config.environment = :test
     assert_equal 'https://preprod-tpeweb.paybox.com/cgi/MYframepagepaiement_ip.cgi', PayboxSystem.light_url
   end
 end
