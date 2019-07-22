@@ -12,7 +12,7 @@ In my humble opinion:
 
 * For **Paybox Direct**, use ActiveMerchant and the built-in Paybox Direct gateway
 * For **Paybox Direct Plus**, use ActiveMerchant and use the Paybox Direct Plus
-  gateway provided [here](https://github.com/arambert/Paybox-Direct-Plus)
+  gateway provided [here](https://github.com/codeur/Paybox-Direct-Plus)
 * For **Paybox System**, use this gem.
 
 **IMPORTANT!** The default way of using Paybox System is by sending commands to a
@@ -80,26 +80,27 @@ send to Paybox, the other to check the integrity of the Paybox response.
 
 ## Configuration
 
-You must initialize a configuration before using the main `Paybox::System` class
+You must initialize a configuration before using the main `PayboxSystem` class
 methods. This configuration must contain the secret key in the key
 `:secret_key`.
 
 For example, the test secret key:
 ```ruby
 # in config/initializers/paybox_system.rb
-Paybox::System.config.secret_key = "0123456789ABCDEF0123456789ABCDEF..."
+PayboxSystem.config.secret_key = "0123456789ABCDEF0123456789ABCDEF..."
+PayboxSystem.config.environment = :production # or :pre_production or :production_rescue
 ```
 
 ## Building the Paybox parameters
 
 Check the manual for the complete list of all the different parameters you need
 to send to Paybox. All these parameters are upper-case and begin by `PBX_`,
-like: `PBX_SITE`. Use the `Paybox::System.formatted_params` with a
+like: `PBX_SITE`. Use the `PayboxSystem.formatted_params` with a
 hash that contains all the paybox parameters in symbols without `PBX_`, for
 example:
 
 ```ruby
-Paybox::System.formatted_params(site: "XYZ") # => returns { "PBX_SITE" => "XYZ", etc. }
+PayboxSystem.formatted_params(site: "XYZ") # => returns { "PBX_SITE" => "XYZ", etc. }
 ```
 
 The returning Hash also contains 3 additional keys: `PBX_HASH` that is always
@@ -110,7 +111,7 @@ on all the previous parameters and the secret key.
 Real example with the Paybox test parameters:
 
 ```ruby
-Paybox::System.formatted_params(
+PayboxSystem.formatted_params(
   site:        "1999888",
   rang:        "32",
   identifiant: "107904482",
@@ -134,9 +135,9 @@ Use the returned Hash to build the form.
 ### 3-D Secure
 
 To work with 3-D Secure variable add `tds` for three-D Secure in the hash used
-in `Paybox::System.formatted_params`. This variable will be
+in `PayboxSystem.formatted_params`. This variable will be
 automatically converted to `PBX_3DS` by the
-`Paybox::System.formatted_params` helper.
+`PayboxSystem.formatted_params` helper.
 
 **Reminder**: *If `PBX_3DS` present the 3-D secure process wil be bypassed by
 Paybox (whatever the value)*
@@ -144,7 +145,7 @@ Paybox (whatever the value)*
 Ex:
 
 ```ruby
-Paybox::System.formatted_params(
+PayboxSystem.formatted_params(
   site:       "1999888",
   rang:       "32",
   ...
@@ -160,7 +161,7 @@ manually-made request to your server. To do so, you have to verify the signature
 provided by Paybox in the request.
 
 You have to get the full request path and separate the parameters and the
-signature. Then use the `Paybox::System.valid_response?` with the
+signature. Then use the `PayboxSystem.valid_response?` with the
 parameters string and the signature. If the method returns true, the message
 integrity is verified, otherwise there is a problem and you should raise an
 exception.
@@ -171,19 +172,19 @@ For example:
 # => The parameters string is: "amount=1500&error=00000&reference=id123456"
 # => The signature string is: "ABCDEFGH123456"
 
-Paybox::System.valid_response?("amount=1500&error=00000&reference=id123456", "ABCDEFGH123456")
+PayboxSystem.valid_response?("amount=1500&error=00000&reference=id123456", "ABCDEFGH123456")
 ```
 
 ## Rails helpers
 
-If you use Rails 3+, you don't have to directly use the `Paybox::System` methods.
+If you use Rails 3+, you don't have to directly use the `PayboxSystem` methods.
 This gem provides a helper class that contains a view helper to generate the
 form and a `before_action` to use in controllers to check the integrity of the
 Paybox response.
 
 In your Gemfile
 ```ruby
-gem 'paybox_system', require: 'paybox/system/rails'
+gem 'paybox_system', require: 'paybox_system/rails'
 ```
 
 Then use the `paybox_hidden_field_tags` helper with the same Hash you may use with

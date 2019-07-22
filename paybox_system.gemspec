@@ -2,11 +2,11 @@
 
 lib = File.expand_path('lib', __dir__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'paybox/system/version'
+require 'paybox_system/version'
 
 Gem::Specification.new do |spec|
   spec.name          = 'paybox_system'
-  spec.version       = Paybox::System::VERSION
+  spec.version       = PayboxSystem::VERSION
   spec.authors       = ['Nicolas Blanco']
   spec.email         = ['slainer68@gmail.com']
 
@@ -42,9 +42,4 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'rack', '>= 0'
   spec.add_development_dependency 'rake', '>= 10'
   spec.add_development_dependency 'rspec', '> 2.8.0'
-  # spec.add_dependency(%q<rack>, [">= 0"])
-  # spec.add_dependency(%q<rspec>, ["~> 2.8.0"])
-  # spec.add_dependency(%q<rdoc>, ["~> 3.12"])
-  # spec.add_dependency(%q<bundler>, ["~> 1.0"])
-  # spec.add_dependency(%q<simplecov>, [">= 0"])
 end

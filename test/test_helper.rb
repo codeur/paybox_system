@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
 $LOAD_PATH.unshift File.expand_path('../lib', __dir__)
-require 'paybox/system'
+require 'paybox_system'
 
 require 'minitest/autorun'
