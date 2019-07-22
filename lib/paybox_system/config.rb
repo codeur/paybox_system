@@ -2,6 +2,6 @@
 
 module PayboxSystem
   class Config
-    attr_accessor :secret_key, :environment
+    attr_accessor :secret_key, :environment, :site, :rank, :identifier, :currency
   end
 end

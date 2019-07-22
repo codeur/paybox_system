@@ -10,7 +10,7 @@ require 'paybox_system/version'
 require 'paybox_system/config'
 
 module PayboxSystem
-  DIGEST_METHOD = 'sha512'
+  HASH_METHOD = 'SHA512'
   PUBLIC_KEY_PATH = Pathname.new(__dir__).join('..', 'docs', 'pubkey.pem')
   PUBLIC_KEY = OpenSSL::PKey::RSA.new(File.read(PUBLIC_KEY_PATH))
 
@@ -18,6 +18,23 @@ module PayboxSystem
     pre_production:    'https://preprod-tpeweb.paybox.com',
     production:        'https://tpeweb.paybox.com',
     production_rescue: 'https://tpeweb1.paybox.com'
+  }.freeze
+
+  CURRENCY_CODES = {
+    'AUD' => '036',
+    'CAD' => '124',
+    'CZK' => '203',
+    'DKK' => '208',
+    'HKD' => '344',
+    'ICK' => '352',
+    'JPY' => '392',
+    'NOK' => '578',
+    'SGD' => '702',
+    'SEK' => '752',
+    'CHF' => '756',
+    'GBP' => '826',
+    'USD' => '840',
+    'EUR' => '978'
   }.freeze
 
   class Error < StandardError; end
@@ -59,12 +76,16 @@ module PayboxSystem
           h["PBX_#{k == :tds ? '3DS' : k.to_s.upcase}"] = v
         end
       end
-      params['PBX_HASH'] = DIGEST_METHOD.upcase
+      params['PBX_SITE'] ||= config.site
+      params['PBX_RANG'] ||= config.rank
+      params['PBX_IDENTIFIANT'] ||= config.identifier
+      params['PBX_DEVISE'] ||= CURRENCY_CODES[config.currency]
+      params['PBX_HASH'] = HASH_METHOD
       params['PBX_TIME'] = Time.now.utc.iso8601
 
       base_params_query = params.map { |k, v| k.to_s + '=' + v.to_s }.join('&')
       binary_key = [config.secret_key].pack('H*')
-      signature = OpenSSL::HMAC.hexdigest(OpenSSL::Digest.new(DIGEST_METHOD), binary_key, base_params_query)
+      signature = OpenSSL::HMAC.hexdigest(OpenSSL::Digest.new(params['PBX_HASH'].downcase), binary_key, base_params_query)
       params['PBX_HMAC'] = signature.upcase
 
       if params['PBX_PORTEUR']
