@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require 'paybox_system/integrity'
-require 'paybox_system/helpers'
+require 'paybox_system/rails/integrity'
+require 'paybox_system/rails/helpers'
 
 module PayboxSystem
   class Engine < ::Rails::Engine
