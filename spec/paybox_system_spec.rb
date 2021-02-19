@@ -34,6 +34,16 @@ describe "Paybox::System::Base" do
         h["PBX_HASH"].should == "SHA512"
         h["PBX_HMAC"].should == "ABCDEFG"
       end
+
+      it "should work with blank fields" do
+        OpenSSL::HMAC.should_receive(:hexdigest).and_return("abcdefg")
+        h = subject.hash_form_fields_from({ :aaa => "", :bbb => nil, :ccc => "ccc" })
+        h.should be_a(Hash)
+        h.keys.should include("PBX_CCC", "PBX_HASH", "PBX_TIME", "PBX_HMAC")
+
+        h["PBX_HASH"].should == "SHA512"
+        h["PBX_HMAC"].should == "ABCDEFG"
+      end
     end
   end
 

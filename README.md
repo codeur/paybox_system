@@ -60,7 +60,7 @@ This configuration Hash must at least contain the secret key in the key :secret_
 For example, the test secret key :
 ```ruby
 Paybox::System::Base.config = {
-  :secret_key => "0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF" 
+  :secret_key => "0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF"
 }
 ```
 
@@ -189,7 +189,7 @@ For example, you may use : `:retour => "amount:M;reference:R;autorization:A;erro
 
 Contributing to Paybox System for Ruby
 --------------------------------------
- 
+
 * Check out the latest master to make sure the feature hasn't been implemented or the bug hasn't been fixed yet.
 * Check out the issue tracker to make sure someone already hasn't requested it and/or contributed it.
 * Fork the project.
