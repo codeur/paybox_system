@@ -56,7 +56,7 @@ module Paybox
       end
 
       def self.blank?(value)
-        value.nil? || value.strip == ''
+        value.respond_to?(:blank?) ? value.blank? : (value.nil? || value.to_s.strip == '')
       end
     end
   end
